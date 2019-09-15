@@ -3296,9 +3296,12 @@ struct sched_avg_stats {
 };
 extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
 
-#if IS_ENABLED(CONFIG_PACKAGE_RUNTIME_INFO)
-void __weak init_task_runtime_info(struct task_struct *tsk)
+#ifdef CONFIG_SMP
+static inline void sched_irq_work_queue(struct irq_work *work)
 {
-	return;
+	if (likely(cpu_online(raw_smp_processor_id())))
+		irq_work_queue(work);
+	else
+		irq_work_queue_on(work, cpumask_any(cpu_online_mask));
 }
 #endif
