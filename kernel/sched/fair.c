@@ -5556,6 +5556,9 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct cfs_rq *cfs_rq;
 	struct sched_entity *se = &p->se;
+	int task_new = !(flags & ENQUEUE_WAKEUP);
+	bool prefer_idle = sched_feat(EAS_PREFER_IDLE) ?
+				(schedtune_prefer_idle(p) > 0) : 0;
 
 	/*
 	 * The code below (indirectly) updates schedutil which looks at
@@ -5643,7 +5646,7 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		 * into account, but that is not straightforward to implement,
 		 * and the following generally works well enough in practice.
 		 */
-		if (flags & ENQUEUE_WAKEUP)
+		if (!task_new && !(prefer_idle && rq->nr_running == 1))
 			update_overutilized_status(rq);
 	}
 
